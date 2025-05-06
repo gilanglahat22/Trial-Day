@@ -30,11 +30,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Public routes
 Route::get('/restaurants', [RestaurantController::class, 'index']);
+Route::get('/restaurant', [RestaurantController::class, 'index']);
 Route::get('/restaurants/{restaurant}', [RestaurantController::class, 'show']);
+Route::get('/restaurant/{restaurant}', [RestaurantController::class, 'show']);
 
 // Admin-only routes (protected with sanctum auth and admin middleware)
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/restaurants', [RestaurantController::class, 'store']);
     Route::put('/restaurants/{restaurant}', [RestaurantController::class, 'update']);
     Route::delete('/restaurants/{restaurant}', [RestaurantController::class, 'destroy']);
+    
+    // Singular routes for compatibility
+    Route::post('/restaurant', [RestaurantController::class, 'store']);
+    Route::put('/restaurant/{restaurant}', [RestaurantController::class, 'update']);
+    Route::delete('/restaurant/{restaurant}', [RestaurantController::class, 'destroy']);
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar as BsNavbar, Nav, Container, Button } from 'react-bootstrap';
+import { Navbar as BsNavbar, Nav, Container, Button, Dropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -26,14 +26,20 @@ const Navbar = () => {
           </Nav>
           <Nav>
             {isAuthenticated ? (
-              <>
-                <Nav.Item className="d-flex align-items-center text-light me-3">
-                  Welcome, {user.name} ({isAdmin() ? 'Admin' : 'User'})
-                </Nav.Item>
-                <Button variant="outline-light" onClick={handleLogout}>
-                  Logout
-                </Button>
-              </>
+              <Dropdown align="end">
+                <Dropdown.Toggle variant="outline-light" id="dropdown-basic">
+                  {user.name} {isAdmin() ? '(Admin)' : '(User)'}
+                </Dropdown.Toggle>
+
+                <Dropdown.Menu>
+                  <Dropdown.Item as="div" className="text-center text-muted">
+                    <small>Signed in as</small>
+                    <div className="fw-bold">{user.email}</div>
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
             ) : (
               <>
                 <Nav.Link as={Link} to="/login">Login</Nav.Link>

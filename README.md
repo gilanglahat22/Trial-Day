@@ -16,11 +16,26 @@ This is a full-stack application with Laravel backend and React frontend, contai
 ├── frontend/           # React frontend application
 ├── docker/             # Docker configuration files
 │   └── nginx/         # Nginx configuration
+│   └── mysql/         # MySQL initialization
 ├── docker-compose.yml  # Docker Compose configuration
 ├── start.sh           # Startup script for Linux/Mac
 ├── start.bat          # Startup script for Windows
+├── check-backend.sh   # Backend check script for Linux/Mac
+├── check-backend.bat  # Backend check script for Windows
 └── README.md          # This file
 ```
+
+## Login Credentials
+
+The application comes with pre-configured user accounts:
+
+### Admin User
+- Email: admin@example.com
+- Password: password
+
+### Regular User
+- Email: user@example.com
+- Password: password
 
 ## Getting Started
 
@@ -38,7 +53,7 @@ The easiest way to start all services is to use the provided startup script:
 #### On Linux/Mac:
 ```bash
 # Make the script executable
-chmod +x start.sh
+chmod +x start.sh check-backend.sh
 
 # Run the startup script
 ./start.sh
@@ -64,7 +79,26 @@ docker-compose build
 docker-compose up -d
 ```
 
-### 4. Access the Application
+### 4. Verify Backend Status
+
+To check if the backend is running properly and connected to the database:
+
+#### On Linux/Mac:
+```bash
+# Make the script executable
+chmod +x check-backend.sh
+
+# Run the check script
+./check-backend.sh
+```
+
+#### On Windows:
+```bash
+# Run the check script
+check-backend.bat
+```
+
+### 5. Access the Application
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost
@@ -119,13 +153,24 @@ docker-compose exec frontend npm run build
 
 ### Common Issues
 
-1. **Permission Issues**
+1. **Backend not connecting to the database**
+```bash
+# Check backend status
+./check-backend.sh  # Linux/Mac
+check-backend.bat   # Windows
+
+# Restart services
+docker-compose down
+docker-compose up -d
+```
+
+2. **Permission Issues**
 ```bash
 # Fix storage permissions
 docker-compose exec backend chown -R www-data:www-data storage bootstrap/cache
 ```
 
-2. **Container Issues**
+3. **Container Issues**
 ```bash
 # Rebuild a specific service
 docker-compose up -d --build backend
@@ -134,7 +179,7 @@ docker-compose up -d --build backend
 docker-compose down -v
 ```
 
-3. **Database Issues**
+4. **Database Issues**
 ```bash
 # Reset database
 docker-compose exec backend php artisan migrate:fresh

@@ -4,20 +4,45 @@ import axios from 'axios';
 // Create the Auth Context
 export const AuthContext = createContext();
 
+const USER_DATA = 'user_data';
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem(USER_DATA)) || null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Set up axios auth header when user changes
+  useEffect(() => {
+    if (user) {
+      // Store user data in localStorage
+      localStorage.setItem(USER_DATA, JSON.stringify(user));
+    } else {
+      // Remove user data from localStorage on logout
+      localStorage.removeItem(USER_DATA);
+    }
+  }, [user]);
 
   // Check if user is logged in on initial load
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
-        // Get user info if logged in
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+        
+        // Validate user session with server
         const response = await axios.get('/api/user');
-        setUser(response.data);
+        if (response.data) {
+          // Update user data if session is valid
+          setUser(response.data);
+        } else {
+          // Clear user data if session is invalid
+          setUser(null);
+        }
       } catch (error) {
-        // User is not authenticated
+        console.error('Session validation error:', error);
+        // User is not authenticated or session expired
         setUser(null);
       } finally {
         setLoading(false);
@@ -27,11 +52,25 @@ export const AuthProvider = ({ children }) => {
     checkLoggedIn();
   }, []);
 
+  // Try to get CSRF token, but continue if it fails
+  const tryGetCsrfToken = async () => {
+    try {
+      await axios.get('/sanctum/csrf-cookie');
+      return true;
+    } catch (error) {
+      console.warn('CSRF token retrieval failed, continuing anyway:', error);
+      return false;
+    }
+  };
+
   // Register a new user
   const register = async (userData) => {
     setLoading(true);
     setError(null);
     try {
+      // Try to get CSRF token first, but proceed anyway
+      await tryGetCsrfToken();
+      
       const response = await axios.post('/api/register', userData);
       
       // Set the user state with the response data
@@ -53,8 +92,10 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
+      // Try to get CSRF token first, but proceed anyway
+      await tryGetCsrfToken();
+      
       // Backend uses Laravel Sanctum for authentication
-      // The API returns a user object if login is successful
       const response = await axios.post('/api/login', credentials);
       
       // Set the user state with the response data
@@ -76,10 +117,11 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       await axios.post('/api/logout');
-      setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Always clear user data regardless of success/failure of logout API call
+      setUser(null);
       setLoading(false);
     }
   };

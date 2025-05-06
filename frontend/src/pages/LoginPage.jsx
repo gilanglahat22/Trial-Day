@@ -53,14 +53,50 @@ const LoginPage = () => {
     setAlertMessage('');
     
     try {
+      // For demo purposes, we'll use the credentials directly
+      console.log("Logging in with:", credentials.email);
+      
       await login(credentials);
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
-      setAlertMessage(
-        error.response?.data?.message || 
-        'Login failed. Please check your credentials and try again.'
-      );
+      
+      // Provide more helpful error message based on error type
+      if (error.response?.status === 404) {
+        setAlertMessage('The login service is not available right now. Please try again later.');
+      } else if (error.response?.status === 422) {
+        // Validation errors
+        setAlertMessage(error.response.data.message || 'Invalid credentials. Please check your email and password.');
+      } else if (error.response?.status === 401) {
+        setAlertMessage('Invalid credentials. Please check your email and password.');
+      } else {
+        setAlertMessage(
+          error.response?.data?.message || 
+          'Login failed. Please check your credentials and try again.'
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // For demo purposes, add direct login buttons
+  const handleDemoLogin = async (type) => {
+    setLoading(true);
+    setAlertMessage('');
+    
+    let demoCredentials = {
+      email: type === 'admin' ? 'admin@example.com' : 'user@example.com',
+      password: 'password'
+    };
+    
+    try {
+      console.log(`Logging in as demo ${type} user:`, demoCredentials.email);
+      await login(demoCredentials);
+      navigate('/');
+    } catch (error) {
+      console.error('Demo login error:', error);
+      setAlertMessage(`Failed to log in as demo ${type}. Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -111,11 +147,34 @@ const LoginPage = () => {
           <Button 
             variant="primary" 
             type="submit" 
-            className="w-100" 
+            className="w-100 mb-3" 
             disabled={loading}
           >
             {loading ? 'Logging in...' : 'Login'}
           </Button>
+          
+          {/* Demo Login Buttons */}
+          <div className="text-center mb-3">
+            <small className="text-muted">Or use demo accounts:</small>
+          </div>
+          <div className="d-flex gap-2 mb-3">
+            <Button
+              variant="outline-secondary"
+              className="w-50"
+              onClick={() => handleDemoLogin('admin')}
+              disabled={loading}
+            >
+              Login as Admin
+            </Button>
+            <Button
+              variant="outline-secondary"
+              className="w-50"
+              onClick={() => handleDemoLogin('user')}
+              disabled={loading}
+            >
+              Login as User
+            </Button>
+          </div>
         </Form>
         
         <div className="mt-3 text-center">

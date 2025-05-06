@@ -1,15 +1,17 @@
 import axios from 'axios';
 
 // Configure axios defaults
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
+// In development, we'll use relative URLs to leverage Vite's proxy
+// In production, we can use the VITE_API_URL from environment variables if needed
+axios.defaults.baseURL = '';
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 axios.defaults.withCredentials = true; // Needed for Laravel Sanctum
 
-// Request interceptor for API calls
+// Add request logging for debugging
 axios.interceptors.request.use(
   config => {
-    // You can add authorization headers or other custom headers here
+    console.log(`Making ${config.method?.toUpperCase()} request to: ${config.url}`);
     return config;
   },
   error => {
@@ -24,14 +26,32 @@ axios.interceptors.response.use(
   },
   async error => {
     const originalRequest = error.config;
+    
+    console.error('API Error:', error.response?.status, error.response?.data || error.message);
 
     // Handle session expiration (401 Unauthorized)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
-      // Redirect to login page or refresh token logic could be implemented here
-      if (window.location.pathname !== '/login') {
+      try {
+        // Check if user data exists in localStorage
+        const userData = localStorage.getItem('user_data');
+        
+        if (!userData) {
+          // No stored user data, redirect to login
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+        
+        // Try the request again
+        return axios(originalRequest);
+      } catch (retryError) {
+        // Clear stored user data
+        localStorage.removeItem('user_data');
+        
+        // Redirect to login page
         window.location.href = '/login';
+        return Promise.reject(retryError);
       }
     }
 
