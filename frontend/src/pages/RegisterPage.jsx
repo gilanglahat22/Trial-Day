@@ -91,7 +91,11 @@ const RegisterPage = () => {
   return (
     <Container className="page-container">
       <div className="auth-form">
-        <h2 className="text-center mb-4">Register</h2>
+        <div className="auth-header text-center mb-4">
+          <div className="auth-icon mb-3">🚀</div>
+          <h2 className="auth-title">Join Us Today!</h2>
+          <p className="auth-subtitle text-muted">Create your account to get started</p>
+        </div>
         
         {alertMessage && (
           <Alert variant="danger" className="mb-4">

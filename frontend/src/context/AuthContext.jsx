@@ -5,6 +5,7 @@ import axios from 'axios';
 export const AuthContext = createContext();
 
 const USER_DATA = 'user_data';
+const AUTH_TOKEN = 'auth_token';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem(USER_DATA)) || null);
@@ -16,9 +17,17 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       // Store user data in localStorage
       localStorage.setItem(USER_DATA, JSON.stringify(user));
+      
+      // Set auth token in axios headers if available
+      const token = localStorage.getItem(AUTH_TOKEN);
+      if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      }
     } else {
-      // Remove user data from localStorage on logout
+      // Remove user data and token from localStorage on logout
       localStorage.removeItem(USER_DATA);
+      localStorage.removeItem(AUTH_TOKEN);
+      delete axios.defaults.headers.common['Authorization'];
     }
   }, [user]);
 
@@ -26,22 +35,43 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
-        if (!user) {
+        const storedToken = localStorage.getItem(AUTH_TOKEN);
+        const storedUser = JSON.parse(localStorage.getItem(USER_DATA) || 'null');
+        
+        console.log('AuthContext: Checking logged in status');
+        console.log('Stored token:', storedToken ? 'exists' : 'none');
+        console.log('Stored user:', storedUser);
+        
+        // If no token, clear everything and finish loading
+        if (!storedToken) {
+          console.log('AuthContext: No token found, setting user to null');
+          setUser(null);
           setLoading(false);
           return;
         }
+
+        // Set auth header for token validation
+        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+        console.log('AuthContext: Token set, validating with server...');
         
         // Validate user session with server
         const response = await axios.get('/api/user');
+        console.log('AuthContext: User validation response:', response.data);
         if (response.data) {
           // Update user data if session is valid
           setUser(response.data);
         } else {
           // Clear user data if session is invalid
+          console.log('AuthContext: Empty response, clearing user');
           setUser(null);
         }
       } catch (error) {
-        console.error('Session validation error:', error);
+        console.error('AuthContext: Session validation error:', error);
+        console.log('Error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
         // User is not authenticated or session expired
         setUser(null);
       } finally {
@@ -73,6 +103,12 @@ export const AuthProvider = ({ children }) => {
       
       const response = await axios.post('/api/register', userData);
       
+      // Store the access token
+      if (response.data.access_token) {
+        localStorage.setItem(AUTH_TOKEN, response.data.access_token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
+      }
+      
       // Set the user state with the response data
       setUser(response.data.user);
       return response.data;
@@ -98,6 +134,12 @@ export const AuthProvider = ({ children }) => {
       // Backend uses Laravel Sanctum for authentication
       const response = await axios.post('/api/login', credentials);
       
+      // Store the access token
+      if (response.data.access_token) {
+        localStorage.setItem(AUTH_TOKEN, response.data.access_token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
+      }
+      
       // Set the user state with the response data
       setUser(response.data.user);
       return response.data;
@@ -116,7 +158,11 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      await axios.post('/api/logout');
+      // Only make logout request if we have a token
+      const token = localStorage.getItem(AUTH_TOKEN);
+      if (token) {
+        await axios.post('/api/logout');
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

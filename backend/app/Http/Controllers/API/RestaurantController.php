@@ -4,92 +4,43 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Restaurant;
+use App\Services\RestaurantFilterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
 
 class RestaurantController extends Controller
 {
+    protected $filterService;
+
+    public function __construct(RestaurantFilterService $filterService)
+    {
+        $this->filterService = $filterService;
+    }
+
     /**
      * Get list of all restaurants with optional filtering
      */
     public function index(Request $request)
     {
-        $query = Restaurant::query();
+        // Start with all restaurants
+        $restaurants = Restaurant::all();
 
-        // Filter by name
+        // Apply name filter
         if ($request->has('name') && !empty($request->name)) {
-            $query->where('name', 'like', '%' . $request->name . '%');
+            $restaurants = $this->filterService->filterByName($restaurants, $request->name);
         }
 
-        // Filter by day (e.g., 'Mon', 'Tue', 'Wed', etc.)
-        if ($request->has('day') && !empty($request->day)) {
-            $day = ucfirst(strtolower(substr($request->day, 0, 3)));
-            $possibleDayFormats = [
-                $day,           // Mon
-                $day . '-',     // Mon-
-                ', ' . $day,    // , Mon
-                '/' . $day,     // /Mon
-                $day . ',',     // Mon,
-            ];
-            
-            $dayConditions = [];
-            foreach ($possibleDayFormats as $format) {
-                $dayConditions[] = "opening_hours LIKE '%$format%'";
-            }
-            
-            $query->whereRaw('(' . implode(' OR ', $dayConditions) . ')');
+        // Apply day and time filters
+        $day = $request->has('day') && !empty($request->day) ? $request->day : null;
+        $time = $request->has('time') && !empty($request->time) ? $request->time : null;
+
+        if ($day || $time) {
+            $restaurants = $this->filterService->filterByDayAndTime($restaurants, $day, $time);
         }
 
-        // Filter by time (checking if the restaurant is open at the specified time)
-        if ($request->has('time') && !empty($request->time)) {
-            try {
-                // Parse the time
-                $queryTime = Carbon::createFromFormat('H:i', $request->time);
-                
-                // Compare with opening hours
-                $restaurants = $query->get();
-                $filteredIds = [];
-                
-                foreach ($restaurants as $restaurant) {
-                    $openingHours = $restaurant->opening_hours;
-                    $schedules = explode('/', $openingHours);
-                    
-                    foreach ($schedules as $schedule) {
-                        $schedule = trim($schedule);
-                        
-                        // Extract time part (e.g., "11:30 am - 9 pm")
-                        if (preg_match('/(\d+(?::\d+)?\s*[ap]m)\s*-\s*(\d+(?::\d+)?\s*[ap]m)/', $schedule, $matches)) {
-                            $openTime = Carbon::createFromFormat('g:i a', str_replace(['.', ' '], ['', ''], $matches[1]));
-                            $closeTime = Carbon::createFromFormat('g:i a', str_replace(['.', ' '], ['', ''], $matches[2]));
-                            
-                            // Handle cases where closing time is after midnight
-                            if ($closeTime->lt($openTime)) {
-                                $closeTime->addDay();
-                            }
-                            
-                            // Check if the restaurant is open at the query time
-                            if ($queryTime->gte($openTime) && $queryTime->lte($closeTime)) {
-                                $filteredIds[] = $restaurant->id;
-                                break;
-                            }
-                        }
-                    }
-                }
-                
-                if (!empty($filteredIds)) {
-                    $query->whereIn('id', $filteredIds);
-                } else {
-                    // No restaurants found for the specified time
-                    return response()->json([]);
-                }
-            } catch (\Exception $e) {
-                return response()->json(['error' => 'Invalid time format. Use HH:MM (24-hour format)'], 422);
-            }
-        }
+        // Convert back to array for JSON response
+        $restaurants = $restaurants->values();
 
-        // Get the results and return
-        $restaurants = $query->get();
         return response()->json($restaurants);
     }
 
@@ -150,5 +101,38 @@ class RestaurantController extends Controller
     {
         $restaurant->delete();
         return response()->json(null, 204);
+    }
+
+    /**
+     * Get parsed opening hours for a restaurant (for debugging/testing)
+     */
+    public function getOpeningHours(Restaurant $restaurant)
+    {
+        $parsedHours = $this->filterService->parseOpeningHours($restaurant->opening_hours);
+        
+        return response()->json([
+            'restaurant' => $restaurant->name,
+            'raw_opening_hours' => $restaurant->opening_hours,
+            'parsed_schedules' => $parsedHours
+        ]);
+    }
+
+    /**
+     * Check if a restaurant is open at specific day and time
+     */
+    public function checkOpenStatus(Request $request, Restaurant $restaurant)
+    {
+        $day = $request->get('day');
+        $time = $request->get('time');
+
+        $isOpen = $this->filterService->isOpenAt($restaurant->opening_hours, $day, $time);
+
+        return response()->json([
+            'restaurant' => $restaurant->name,
+            'day' => $day,
+            'time' => $time,
+            'is_open' => $isOpen,
+            'opening_hours' => $restaurant->opening_hours
+        ]);
     }
 } 

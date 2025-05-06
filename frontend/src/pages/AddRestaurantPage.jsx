@@ -99,7 +99,11 @@ const AddRestaurantPage = () => {
   return (
     <Container className="page-container">
       <div className="auth-form">
-        <h2 className="text-center mb-4">Add New Restaurant</h2>
+        <div className="auth-header text-center mb-4">
+          <div className="auth-icon mb-3">🏪</div>
+          <h2 className="auth-title">Add New Restaurant</h2>
+          <p className="auth-subtitle text-muted">Share a great dining spot with the community</p>
+        </div>
         
         {alertMessage && (
           <Alert variant={alertType} className="mb-4">
@@ -142,19 +146,21 @@ const AddRestaurantPage = () => {
             </Form.Control.Feedback>
           </Form.Group>
           
-          <div className="d-flex justify-content-between">
+          <div className="d-flex gap-3 justify-content-center">
             <Button 
               variant="outline-secondary" 
               onClick={() => navigate('/')}
+              className="flex-fill"
             >
-              Cancel
+              ❌ Cancel
             </Button>
             <Button 
               variant="primary" 
               type="submit" 
               disabled={loading}
+              className="flex-fill"
             >
-              {loading ? 'Adding...' : 'Add Restaurant'}
+              {loading ? '⏳ Adding...' : '✅ Add Restaurant'}
             </Button>
           </div>
         </Form>

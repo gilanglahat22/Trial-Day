@@ -34,6 +34,10 @@ Route::get('/restaurant', [RestaurantController::class, 'index']);
 Route::get('/restaurants/{restaurant}', [RestaurantController::class, 'show']);
 Route::get('/restaurant/{restaurant}', [RestaurantController::class, 'show']);
 
+// Debug routes for testing opening hours parsing
+Route::get('/restaurants/{restaurant}/opening-hours', [RestaurantController::class, 'getOpeningHours']);
+Route::get('/restaurants/{restaurant}/check-open', [RestaurantController::class, 'checkOpenStatus']);
+
 // Admin-only routes (protected with sanctum auth and admin middleware)
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/restaurants', [RestaurantController::class, 'store']);

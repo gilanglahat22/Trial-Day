@@ -105,7 +105,11 @@ const LoginPage = () => {
   return (
     <Container className="page-container">
       <div className="auth-form">
-        <h2 className="text-center mb-4">Login</h2>
+        <div className="auth-header text-center mb-4">
+          <div className="auth-icon mb-3">🔐</div>
+          <h2 className="auth-title">Welcome Back!</h2>
+          <p className="auth-subtitle text-muted">Sign in to your account to continue</p>
+        </div>
         
         {alertMessage && (
           <Alert variant="danger" className="mb-4">
@@ -154,26 +158,28 @@ const LoginPage = () => {
           </Button>
           
           {/* Demo Login Buttons */}
-          <div className="text-center mb-3">
-            <small className="text-muted">Or use demo accounts:</small>
-          </div>
-          <div className="d-flex gap-2 mb-3">
-            <Button
-              variant="outline-secondary"
-              className="w-50"
-              onClick={() => handleDemoLogin('admin')}
-              disabled={loading}
-            >
-              Login as Admin
-            </Button>
-            <Button
-              variant="outline-secondary"
-              className="w-50"
-              onClick={() => handleDemoLogin('user')}
-              disabled={loading}
-            >
-              Login as User
-            </Button>
+          <div className="demo-section">
+            <div className="demo-divider">
+              <span className="demo-text">Quick Demo Access</span>
+            </div>
+            <div className="d-flex gap-2 mb-3">
+              <Button
+                variant="outline-success"
+                className="w-50 demo-btn"
+                onClick={() => handleDemoLogin('admin')}
+                disabled={loading}
+              >
+                👑 Admin Demo
+              </Button>
+              <Button
+                variant="outline-info"
+                className="w-50 demo-btn"
+                onClick={() => handleDemoLogin('user')}
+                disabled={loading}
+              >
+                👤 User Demo
+              </Button>
+            </div>
           </div>
         </Form>
         
