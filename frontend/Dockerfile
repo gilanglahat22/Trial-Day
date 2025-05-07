@@ -12,11 +12,14 @@ RUN npm install
 # Copy the rest of the application
 COPY . .
 
-# Build the application
+# Build the application for production
 RUN npm run build
+
+# Install a simple HTTP server for serving static content
+RUN npm install -g http-server
 
 # Expose port 5173 for Vite dev server
 EXPOSE 5173
 
-# Start the application
-CMD ["npm", "run", "dev"] 
+# Start the application with host specified
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"] 

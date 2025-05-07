@@ -17,6 +17,8 @@ This is a full-stack application with Laravel backend and React frontend, contai
 ├── docker/             # Docker configuration files
 │   └── nginx/         # Nginx configuration
 ├── docker-compose.yml  # Docker Compose configuration
+├── start.sh           # Startup script for Linux/Mac
+├── start.bat          # Startup script for Windows
 └── README.md          # This file
 ```
 
@@ -29,28 +31,30 @@ git clone <repository-url>
 cd <project-directory>
 ```
 
-### 2. Environment Setup
+### 2. Quick Start (Recommended)
 
-#### Backend (.env)
-Create a `.env` file in the backend directory:
+The easiest way to start all services is to use the provided startup script:
 
+#### On Linux/Mac:
 ```bash
-cp backend/.env.example backend/.env
+# Make the script executable
+chmod +x start.sh
+
+# Run the startup script
+./start.sh
 ```
 
-Update the database configuration in `backend/.env`:
-```
-DB_CONNECTION=mysql
-DB_HOST=db
-DB_PORT=3306
-DB_DATABASE=laravel
-DB_USERNAME=laravel
-DB_PASSWORD=secret
+#### On Windows:
+```bash
+# Run the batch file
+start.bat
 ```
 
-### 3. Build and Run with Docker Compose
+This will build and start all services (backend, frontend, and database) with a single command.
 
-#### First-time Setup
+### 3. Manual Startup
+
+If you prefer to run commands manually:
 
 ```bash
 # Build the containers
@@ -58,34 +62,6 @@ docker-compose build
 
 # Start all services
 docker-compose up -d
-
-# Generate application key for Laravel
-docker-compose exec backend php artisan key:generate
-
-# Run database migrations
-docker-compose exec backend php artisan migrate
-
-# Install frontend dependencies (if needed)
-docker-compose exec frontend npm install
-```
-
-#### Regular Usage
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f
-
-# View logs for specific service
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f nginx
-docker-compose logs -f db
 ```
 
 ### 4. Access the Application
@@ -98,9 +74,22 @@ docker-compose logs -f db
   - Password: secret
   - Root Password: root
 
-### 5. Development Commands
+## Development Commands
 
-#### Backend (Laravel)
+### View Logs
+
+```bash
+# View logs for all services
+docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f nginx
+docker-compose logs -f db
+```
+
+### Backend (Laravel) Commands
 
 ```bash
 # Run migrations
@@ -116,7 +105,7 @@ docker-compose exec backend php artisan make:migration migration_name
 docker-compose exec backend php artisan test
 ```
 
-#### Frontend (React)
+### Frontend (React) Commands
 
 ```bash
 # Install new dependencies
@@ -126,9 +115,9 @@ docker-compose exec frontend npm install package-name
 docker-compose exec frontend npm run build
 ```
 
-### 6. Troubleshooting
+## Troubleshooting
 
-#### Common Issues
+### Common Issues
 
 1. **Permission Issues**
 ```bash
@@ -155,7 +144,7 @@ docker-compose exec backend php artisan cache:clear
 docker-compose exec backend php artisan config:clear
 ```
 
-### 7. Production Deployment
+## Production Deployment
 
 For production deployment, make sure to:
 
