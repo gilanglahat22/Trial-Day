@@ -1,6 +1,179 @@
 # Restaurant List Application
 
-A full-stack web application for managing restaurant listings, built with Laravel (backend) and React (frontend).
+This is a full-stack application with Laravel backend and React frontend, containerized using Docker.
+
+## Prerequisites
+
+- Docker
+- Docker Compose
+- Git
+
+## Project Structure
+
+```
+.
+├── backend/             # Laravel backend application
+├── frontend/           # React frontend application
+├── docker/             # Docker configuration files
+│   └── nginx/         # Nginx configuration
+├── docker-compose.yml  # Docker Compose configuration
+└── README.md          # This file
+```
+
+## Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd <project-directory>
+```
+
+### 2. Environment Setup
+
+#### Backend (.env)
+Create a `.env` file in the backend directory:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Update the database configuration in `backend/.env`:
+```
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=laravel
+DB_PASSWORD=secret
+```
+
+### 3. Build and Run with Docker Compose
+
+#### First-time Setup
+
+```bash
+# Build the containers
+docker-compose build
+
+# Start all services
+docker-compose up -d
+
+# Generate application key for Laravel
+docker-compose exec backend php artisan key:generate
+
+# Run database migrations
+docker-compose exec backend php artisan migrate
+
+# Install frontend dependencies (if needed)
+docker-compose exec frontend npm install
+```
+
+#### Regular Usage
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f nginx
+docker-compose logs -f db
+```
+
+### 4. Access the Application
+
+- Frontend: http://localhost:5173
+- Backend API: http://localhost
+- MySQL Database: localhost:3306
+  - Database: laravel
+  - Username: laravel
+  - Password: secret
+  - Root Password: root
+
+### 5. Development Commands
+
+#### Backend (Laravel)
+
+```bash
+# Run migrations
+docker-compose exec backend php artisan migrate
+
+# Run seeders
+docker-compose exec backend php artisan db:seed
+
+# Create a new migration
+docker-compose exec backend php artisan make:migration migration_name
+
+# Run tests
+docker-compose exec backend php artisan test
+```
+
+#### Frontend (React)
+
+```bash
+# Install new dependencies
+docker-compose exec frontend npm install package-name
+
+# Build for production
+docker-compose exec frontend npm run build
+```
+
+### 6. Troubleshooting
+
+#### Common Issues
+
+1. **Permission Issues**
+```bash
+# Fix storage permissions
+docker-compose exec backend chown -R www-data:www-data storage bootstrap/cache
+```
+
+2. **Container Issues**
+```bash
+# Rebuild a specific service
+docker-compose up -d --build backend
+
+# Remove all containers and volumes (WARNING: This will delete all data)
+docker-compose down -v
+```
+
+3. **Database Issues**
+```bash
+# Reset database
+docker-compose exec backend php artisan migrate:fresh
+
+# Clear cache
+docker-compose exec backend php artisan cache:clear
+docker-compose exec backend php artisan config:clear
+```
+
+### 7. Production Deployment
+
+For production deployment, make sure to:
+
+1. Update environment variables with production values
+2. Set proper security measures in Nginx configuration
+3. Use production build for frontend
+4. Configure proper database backups
+5. Set up SSL certificates
+
+## Contributing
+
+1. Create a new branch for your feature
+2. Make your changes
+3. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
 
 ## Features
 
