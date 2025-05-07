@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }) => {
       // Only make logout request if we have a token
       const token = localStorage.getItem(AUTH_TOKEN);
       if (token) {
-        await axios.post('/api/logout');
+      await axios.post('/api/logout');
       }
     } catch (error) {
       console.error('Logout error:', error);

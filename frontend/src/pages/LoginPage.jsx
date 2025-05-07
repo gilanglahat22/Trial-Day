@@ -161,24 +161,24 @@ const LoginPage = () => {
           <div className="demo-section">
             <div className="demo-divider">
               <span className="demo-text">Quick Demo Access</span>
-            </div>
-            <div className="d-flex gap-2 mb-3">
-              <Button
+          </div>
+          <div className="d-flex gap-2 mb-3">
+            <Button
                 variant="outline-success"
                 className="w-50 demo-btn"
-                onClick={() => handleDemoLogin('admin')}
-                disabled={loading}
-              >
+              onClick={() => handleDemoLogin('admin')}
+              disabled={loading}
+            >
                 👑 Admin Demo
-              </Button>
-              <Button
+            </Button>
+            <Button
                 variant="outline-info"
                 className="w-50 demo-btn"
-                onClick={() => handleDemoLogin('user')}
-                disabled={loading}
-              >
+              onClick={() => handleDemoLogin('user')}
+              disabled={loading}
+            >
                 👤 User Demo
-              </Button>
+            </Button>
             </div>
           </div>
         </Form>

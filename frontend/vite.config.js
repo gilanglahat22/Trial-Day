@@ -9,7 +9,7 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://nginx:80',
+        target: 'http://backend:8000',
         changeOrigin: true,
         secure: false,
         ws: true,
@@ -26,7 +26,7 @@ export default defineConfig({
         },
       },
       '/sanctum': {
-        target: 'http://nginx:80',
+        target: 'http://backend:8000',
         changeOrigin: true,
         secure: false,
         ws: true,

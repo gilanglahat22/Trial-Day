@@ -98,7 +98,7 @@ class RestaurantService {
       } else if (error.response?.status >= 500) {
         throw new Error('Server error - please try again later');
       } else {
-        throw error;
+      throw error;
       }
     } finally {
       clearTimeout(timeoutId);

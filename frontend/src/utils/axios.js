@@ -43,10 +43,10 @@ axios.interceptors.response.use(
       originalRequest._retry = true;
       
       // Clear stored user data and token
-      localStorage.removeItem('user_data');
+        localStorage.removeItem('user_data');
       localStorage.removeItem('auth_token');
       delete axios.defaults.headers.common['Authorization'];
-      
+        
       // Only redirect to login if we're not already on login/register pages
       const currentPath = window.location.pathname;
       if (currentPath !== '/login' && currentPath !== '/register') {

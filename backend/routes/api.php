@@ -38,6 +38,11 @@ Route::get('/restaurant/{restaurant}', [RestaurantController::class, 'show']);
 Route::get('/restaurants/{restaurant}/opening-hours', [RestaurantController::class, 'getOpeningHours']);
 Route::get('/restaurants/{restaurant}/check-open', [RestaurantController::class, 'checkOpenStatus']);
 
+// Cache management routes
+Route::get('/cache/stats', [RestaurantController::class, 'getCacheStats']);
+Route::post('/cache/warm-up', [RestaurantController::class, 'warmUpCache']);
+Route::delete('/cache/clear', [RestaurantController::class, 'clearCache']);
+
 // Admin-only routes (protected with sanctum auth and admin middleware)
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/restaurants', [RestaurantController::class, 'store']);

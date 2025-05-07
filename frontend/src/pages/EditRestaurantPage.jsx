@@ -29,11 +29,26 @@ const EditRestaurantPage = () => {
       }
 
       try {
-        const data = await RestaurantService.getRestaurant(id);
-        setRestaurantData({
+        console.log('EditRestaurantPage: Fetching restaurant with ID:', id);
+        const response = await RestaurantService.getRestaurant(id);
+        console.log('EditRestaurantPage: Received restaurant data:', response);
+        
+        // Handle both direct data and wrapped data response
+        const data = response.data || response;
+        
+        console.log('EditRestaurantPage: Setting form data:', {
           name: data.name,
           opening_hours: data.opening_hours
         });
+        
+        setRestaurantData({
+          name: data.name || '',
+          opening_hours: data.opening_hours || ''
+        });
+        
+        setAlertType('info');
+        setAlertMessage(`Loaded data for "${data.name}". You can now edit the information below.`);
+        
       } catch (error) {
         console.error('Error fetching restaurant:', error);
         setAlertType('danger');
@@ -113,7 +128,18 @@ const EditRestaurantPage = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <Container className="page-container">
+        <div className="auth-form">
+          <div className="auth-header text-center mb-4">
+            <div className="auth-icon mb-3">✏️</div>
+            <h2 className="auth-title">Edit Restaurant</h2>
+            <p className="auth-subtitle text-muted">Loading restaurant data...</p>
+          </div>
+          <LoadingSpinner />
+        </div>
+      </Container>
+    );
   }
 
   return (
@@ -131,6 +157,16 @@ const EditRestaurantPage = () => {
           </Alert>
         )}
         
+        {!loading && restaurantData.name && (
+          <Alert variant="light" className="mb-4">
+            <h6 className="mb-2">📋 Original Data (for reference):</h6>
+            <div className="small">
+              <strong>Name:</strong> {restaurantData.name}<br/>
+              <strong>Opening Hours:</strong> {restaurantData.opening_hours}
+            </div>
+          </Alert>
+        )}
+        
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3" controlId="name">
             <Form.Label>Restaurant Name</Form.Label>
@@ -141,7 +177,13 @@ const EditRestaurantPage = () => {
               onChange={handleChange}
               isInvalid={!!errors.name}
               placeholder="Enter restaurant name"
+              className={restaurantData.name ? 'border-info' : ''}
             />
+            {restaurantData.name && (
+              <Form.Text className="text-info">
+                ✓ Current value loaded. You can edit this field.
+              </Form.Text>
+            )}
             <Form.Control.Feedback type="invalid">
               {errors.name}
             </Form.Control.Feedback>
@@ -157,7 +199,13 @@ const EditRestaurantPage = () => {
               onChange={handleChange}
               isInvalid={!!errors.opening_hours}
               placeholder="E.g., Mon-Fri 9 am - 10 pm / Sat-Sun 10 am - 11 pm"
+              className={restaurantData.opening_hours ? 'border-info' : ''}
             />
+            {restaurantData.opening_hours && (
+              <Form.Text className="text-info">
+                ✓ Current value loaded. You can edit this field.
+              </Form.Text>
+            )}
             <Form.Text className="text-muted">
               Format: Day(s) opening time - closing time, separate different schedules with /
             </Form.Text>

@@ -38,6 +38,24 @@ sed -i "s/DB_DATABASE=.*/DB_DATABASE=laravel/" .env
 sed -i "s/DB_USERNAME=.*/DB_USERNAME=laravel/" .env
 sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=secret/" .env
 
+# Add Redis configuration to .env if not present
+if ! grep -q "REDIS_HOST" .env; then
+    echo "REDIS_HOST=redis" >> .env
+fi
+if ! grep -q "CACHE_DRIVER" .env; then
+    echo "CACHE_DRIVER=redis" >> .env
+fi
+if ! grep -q "REDIS_PORT" .env; then
+    echo "REDIS_PORT=6379" >> .env
+fi
+if ! grep -q "REDIS_PASSWORD" .env; then
+    echo "REDIS_PASSWORD=null" >> .env
+fi
+
+# Update existing Redis configuration
+sed -i "s/REDIS_HOST=.*/REDIS_HOST=redis/" .env
+sed -i "s/CACHE_DRIVER=.*/CACHE_DRIVER=redis/" .env
+
 # Generate application key if not set
 if [ -z "$(grep "^APP_KEY=" .env | cut -d "=" -f2)" ] || [ "$(grep "^APP_KEY=" .env | cut -d "=" -f2)" == "" ]; then
     php artisan key:generate
@@ -61,6 +79,32 @@ done
 echo "MySQL is available, waiting for it to be ready..."
 sleep 5
 
+# Wait for Redis to be ready
+echo "Waiting for Redis connection..."
+redis_retries=30
+redis_counter=0
+
+while ! nc -z redis 6379; do
+    redis_counter=$((redis_counter+1))
+    if [ $redis_counter -gt $redis_retries ]; then
+        echo "Warning: Failed to connect to Redis after $redis_retries attempts!"
+        echo "Continuing without Redis cache..."
+        # Set cache driver to file as fallback
+        sed -i "s/CACHE_DRIVER=.*/CACHE_DRIVER=file/" .env
+        REDIS_AVAILABLE=false
+        break
+    fi
+    echo "Waiting for Redis to be available... ($redis_counter/$redis_retries)"
+    sleep 2
+done
+
+if [ "$redis_counter" -le "$redis_retries" ]; then
+    echo "Redis is available!"
+    REDIS_AVAILABLE=true
+else
+    REDIS_AVAILABLE=false
+fi
+
 # Try to run migrations
 echo "Running database migrations..."
 php artisan migrate --force || {
@@ -82,12 +126,22 @@ chmod -R 755 /var/www/bootstrap/cache
 echo "Generating autoload files..."
 composer dump-autoload --optimize
 
-# Clear cache
+# Clear cache (handle Redis connection gracefully)
+echo "Clearing application cache..."
 php artisan config:clear
 php artisan route:clear
-php artisan cache:clear
+
+# Only clear cache if Redis is available, otherwise skip
+if [ "$REDIS_AVAILABLE" = true ]; then
+    echo "Clearing Redis cache..."
+    php artisan cache:clear || {
+        echo "Warning: Redis cache clear failed, but continuing..."
+    }
+else
+    echo "Skipping Redis cache clear (Redis not available)"
+fi
 
 echo "Laravel backend is ready!"
 
-# Start PHP-FPM
-exec php-fpm 
+# Start Laravel development server
+exec php artisan serve --host=0.0.0.0 --port=8000 

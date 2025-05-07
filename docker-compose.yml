@@ -36,6 +36,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - app-network
     environment:
@@ -48,6 +50,10 @@ services:
       - DB_DATABASE=laravel
       - DB_USERNAME=laravel
       - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=null
+      - CACHE_DRIVER=redis
 
   # Frontend Service
   frontend:
@@ -62,7 +68,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost
+      - VITE_API_URL=
       - HOST=0.0.0.0
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:5173/index.html"]
@@ -98,10 +104,31 @@ services:
       - app-network
     command: --default-authentication-plugin=mysql_native_password
 
+  # Redis Service
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
 
 volumes:
   dbdata:
+    driver: local
+  redisdata:
     driver: local 

@@ -29,8 +29,8 @@ const HomePage = () => {
         console.log('HomePage: Is array:', Array.isArray(data));
         
         if (Array.isArray(data)) {
-          setRestaurants(data);
-          setError(null);
+        setRestaurants(data);
+        setError(null);
           console.log('HomePage: Successfully set restaurants:', data.length, 'items');
         } else {
           console.error('HomePage: Data is not an array:', data);
@@ -51,7 +51,7 @@ const HomePage = () => {
         } else if (err.message.includes('Network error')) {
           setError('Unable to connect to server. Please try again later.');
         } else {
-          setError('Failed to load restaurants. Please try again later.');
+        setError('Failed to load restaurants. Please try again later.');
         }
         
         // As a last resort, set an empty array so the app doesn't crash
